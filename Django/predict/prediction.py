@@ -3,8 +3,17 @@ from dotenv import load_dotenv
 import requests
 import pandas as pd
 import numpy as np
-import tensorflow as tf
-import joblib
+try:
+    import tensorflow as tf
+except ImportError:
+    tf = None
+
+try:
+    import joblib
+except ImportError:
+    joblib = None
+
+
 from datetime import datetime, timedelta
 
 # Global cache for models and scalers to avoid reloading
@@ -80,6 +89,10 @@ def load_model_and_scaler(symbol="BTC", interval="1h"):
         print(f"[INFO] Using cached model and scaler for {symbol} {interval}")
         return _MODEL_CACHE[cache_key], _SCALER_CACHE[cache_key]
     
+    if tf is None or joblib is None:
+        print("[WARNING] TensorFlow or Joblib not installed. Running in mock/fallback mode.")
+        return None, None
+
     base_folder = 'models_hourly' if interval == "1h" else 'models_daily'
     model_file = f"{symbol}_{'hourly' if interval=='1h' else 'daily'}_lstm.keras"
     scaler_file = f"{symbol}_scaler.pkl"
